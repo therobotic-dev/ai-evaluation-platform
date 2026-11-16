@@ -1,0 +1,591 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Evaluation Quality Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: auto;
+        }
+
+        h1 { margin-bottom: 8px; }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card, .section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            margin: 0 0 14px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .number {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .quality-label {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .refresh {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 7px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        #message {
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        #lastUpdated {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .status-pending {
+            color: #b45309;
+            font-weight: bold;
+        }
+
+        .status-resolved {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .action-create {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .action-update {
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .action-resolve {
+            color: #ba0808;
+            font-weight: bold;
+        }
+
+        .action-delete {
+            color: #374151;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>AI Evaluation Quality Dashboard</h1>
+
+    <p class="subtitle">
+        Monitor AI evaluation performance and quality.
+    </p>
+
+    <button class="refresh" onclick="loadDashboard()">
+        Refresh Data
+    </button>
+
+    <p id="message">Loading dashboard data...</p>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Evaluations</h3>
+            <div class="number" id="total">-</div>
+        </div>
+
+        <div class="card">
+            <h3>Pending</h3>
+            <div class="number" id="pending">-</div>
+        </div>
+
+        <div class="card">
+            <h3>In Review</h3>
+            <div class="number" id="inReview">-</div>
+        </div>
+
+        <div class="card">
+            <h3>Completed</h3>
+            <div class="number" id="completed">-</div>
+        </div>
+
+        <div class="card">
+            <h3>Average Score</h3>
+            <div class="number" id="average">-</div>
+            <span class="quality-label" id="qualityLabel">
+                Calculating...
+            </span>
+        </div>
+
+    </div>
+
+    <div class="charts">
+
+        <div class="section">
+            <h2>Evaluation Status Distribution</h2>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Average Score by Rubric</h2>
+            <div class="chart-container">
+                <canvas id="rubricChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="section">
+        <h2>Quality by Rubric</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rubric Name</th>
+                        <th>Total Evaluations</th>
+                        <th>Average Score</th>
+                    </tr>
+                </thead>
+
+                <tbody id="rubricTable">
+                    <tr><td colspan="3">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Disagreements</h3>
+            <div class="number" id="totalDisagreements">-</div>
+        </div>
+
+        <div class="card">
+            <h3>Pending Disagreements</h3>
+            <div class="number" id="pendingDisagreements">-</div>
+        </div>
+
+        <div class="card">
+            <h3>Resolved Disagreements</h3>
+            <div class="number" id="resolvedDisagreements">-</div>
+        </div>
+
+    </div>
+
+    <div class="section">
+
+        <h2>Reviewer Disagreement Tracking</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Evaluation ID</th>
+                        <th>Reviewer 1</th>
+                        <th>Reviewer 2</th>
+                        <th>Score Difference</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="disagreementTable">
+                    <tr>
+                        <td colspan="6">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <br>
+
+    <div class="section">
+
+        <h2>Audit Activity History</h2>
+
+        <p class="subtitle">
+            Track important changes and actions recorded by the platform.
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Action</th>
+                        <th>Entity Type</th>
+                        <th>Entity ID</th>
+                        <th>Description</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+
+                <tbody id="auditTable">
+                    <tr>
+                        <td colspan="6">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <p id="lastUpdated">Last updated: -</p>
+
+</div>
+
+<script>
+    let statusChart = null;
+    let rubricChart = null;
+
+    function getQualityCategory(score) {
+        if (score >= 90) return "Excellent";
+        if (score >= 80) return "Good";
+        if (score >= 70) return "Fair";
+        return "Needs Improvement";
+    }
+
+    async function loadDashboard() {
+        const message = document.getElementById("message");
+
+        message.textContent = "Loading data...";
+
+        try {
+            const responses = await Promise.all([
+                fetch("/analytics/summary"),
+                fetch("/analytics/rubric-quality"),
+                fetch("/disagreements/"),
+                fetch("/audit-logs/")
+            ]);
+
+            if (responses.some(response => !response.ok)) {
+                throw new Error("Unable to load dashboard data.");
+            }
+
+            const summary = await responses[0].json();
+            const rubricData = await responses[1].json();
+            const disagreementData = await responses[2].json();
+            const auditData = await responses[3].json();
+
+            document.getElementById("total").textContent =
+                summary.total_evaluations;
+
+            document.getElementById("pending").textContent =
+                summary.status_summary.Pending;
+
+            document.getElementById("inReview").textContent =
+                summary.status_summary["In Review"];
+
+            document.getElementById("completed").textContent =
+                summary.status_summary.Completed;
+
+            document.getElementById("average").textContent =
+                summary.average_score ?? "N/A";
+
+            document.getElementById("qualityLabel").textContent =
+                summary.average_score !== null
+                    ? getQualityCategory(summary.average_score)
+                    : "No scores yet";
+
+            if (statusChart) statusChart.destroy();
+
+            statusChart = new Chart(
+                document.getElementById("statusChart"),
+                {
+                    type: "doughnut",
+                    data: {
+                        labels: ["Pending", "In Review", "Completed"],
+                        datasets: [{
+                            data: [
+                                summary.status_summary.Pending,
+                                summary.status_summary["In Review"],
+                                summary.status_summary.Completed
+                            ],
+                            backgroundColor: [
+                                "#f59e0b",
+                                "#3b82f6",
+                                "#16a34a"
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                }
+            );
+
+            if (rubricChart) rubricChart.destroy();
+
+            const scoredRubrics = rubricData.data.filter(
+                rubric => rubric.average_score !== null
+            );
+
+            rubricChart = new Chart(
+                document.getElementById("rubricChart"),
+                {
+                    type: "bar",
+                    data: {
+                        labels: scoredRubrics.map(
+                            rubric => rubric.rubric_name
+                        ),
+                        datasets: [{
+                            label: "Average Score",
+                            data: scoredRubrics.map(
+                                rubric => rubric.average_score
+                            ),
+                            backgroundColor: "#3b82f6"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                }
+            );
+
+            const rubricTable =
+                document.getElementById("rubricTable");
+
+            rubricTable.innerHTML = "";
+
+            if (rubricData.data.length === 0) {
+                rubricTable.innerHTML =
+                    '<tr><td colspan="3">No rubric data available.</td></tr>';
+            } else {
+                rubricData.data.forEach(rubric => {
+                    const row = document.createElement("tr");
+
+                    [
+                        rubric.rubric_name,
+                        rubric.total_evaluations,
+                        rubric.average_score ?? "N/A"
+                    ].forEach(value => {
+                        const cell = document.createElement("td");
+                        cell.textContent = value;
+                        row.appendChild(cell);
+                    });
+
+                    rubricTable.appendChild(row);
+                });
+            }
+
+            const disagreements = disagreementData.data;
+
+            const pendingCount = disagreements.filter(
+                item => item.resolution_status === "Pending"
+            ).length;
+
+            const resolvedCount = disagreements.filter(
+                item => item.resolution_status === "Resolved"
+            ).length;
+
+            document.getElementById("totalDisagreements").textContent =
+                disagreementData.total;
+
+            document.getElementById("pendingDisagreements").textContent =
+                pendingCount;
+
+            document.getElementById("resolvedDisagreements").textContent =
+                resolvedCount;
+
+            const disagreementTable =
+                document.getElementById("disagreementTable");
+
+            disagreementTable.innerHTML = "";
+
+            if (disagreements.length === 0) {
+                disagreementTable.innerHTML =
+                    '<tr><td colspan="6">No disagreements recorded.</td></tr>';
+            } else {
+                disagreements.forEach(item => {
+                    const row = document.createElement("tr");
+
+                    const difference = Math.abs(
+                        item.reviewer_1_score - item.reviewer_2_score
+                    );
+
+                    const values = [
+                        item.id,
+                        item.evaluation_id,
+                        item.reviewer_1_score,
+                        item.reviewer_2_score,
+                        difference,
+                        item.resolution_status
+                    ];
+
+                    values.forEach((value, index) => {
+                        const cell = document.createElement("td");
+                        cell.textContent = value;
+
+                        if (index === 5) {
+                            cell.className =
+                                item.resolution_status === "Resolved"
+                                    ? "status-resolved"
+                                    : "status-pending";
+                        }
+
+                        row.appendChild(cell);
+                    });
+
+                    disagreementTable.appendChild(row);
+                });
+            }
+
+            const auditTable =
+                document.getElementById("auditTable");
+
+            auditTable.innerHTML = "";
+
+            if (auditData.data.length === 0) {
+                auditTable.innerHTML =
+                    '<tr><td colspan="6">No audit activities recorded.</td></tr>';
+            } else {
+                auditData.data.forEach(item => {
+                    const row = document.createElement("tr");
+
+                    const values = [
+                        item.id,
+                        item.action,
+                        item.entity_type,
+                        item.entity_id ?? "N/A",
+                        item.description,
+                        item.created_at
+                            ? new Date(item.created_at).toLocaleString()
+                            : "N/A"
+                    ];
+
+                    values.forEach((value, index) => {
+                        const cell = document.createElement("td");
+                        cell.textContent = value;
+
+                        if (index === 1) {
+                            cell.className =
+                                "action-" + String(item.action).toLowerCase();
+                        }
+
+                        row.appendChild(cell);
+                    });
+
+                    auditTable.appendChild(row);
+                });
+            }
+
+            document.getElementById("lastUpdated").textContent =
+                "Last updated: " + new Date().toLocaleString();
+
+            message.textContent =
+                "Dashboard data loaded successfully.";
+
+        } catch (error) {
+            message.textContent =
+                "Error loading dashboard: " + error.message;
+        }
+    }
+
+    loadDashboard();
+</script>
+
+</body>
+</html>
