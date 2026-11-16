@@ -58,6 +58,8 @@ The platform focuses on supporting human-led AI evaluation and quality monitorin
 - CSS
 - JavaScript
 - Chart.js
+- Pytest
+- HTTPX
 
 ## Project Structure
 
@@ -90,6 +92,15 @@ ai-evaluation-platform/
 │   │   └── dashboard.html
 │   │
 │   └── main.py
+│
+├── tests/
+│   └── test_api.py
+│
+├── screenshots/
+│   ├── 01-main-dashboard.png
+│   ├── 02-api-documentation.png
+│   ├── 03-reviewer-disagreement-and-audit-logs.png
+│   └── 04-full-dashboard.png
 │
 ├── .gitignore
 ├── requirements.txt
@@ -155,7 +166,34 @@ http://127.0.0.1:8000/docs
 
 ## Testing
 
-The following application workflows have been manually tested through the FastAPI interactive API documentation:
+The application includes automated API tests using Pytest and FastAPI TestClient.
+
+### Run automated tests
+
+```bash
+python -m pytest tests/test_api.py -v
+```
+
+### Automated test coverage
+
+The current test suite contains 8 tests covering:
+
+- Root endpoint response.
+- Health check endpoint.
+- Evaluation API response.
+- Rubric API response.
+- Analytics summary endpoint.
+- Reviewer disagreement endpoint.
+- Audit logs endpoint.
+- Dashboard endpoint availability.
+
+### Latest test results
+
+```text
+8 passed, 0 failed
+```
+
+The application workflows have also been manually tested through the FastAPI interactive API documentation, including:
 
 - Evaluation CRUD operations.
 - Rubric creation and validation.
@@ -172,13 +210,17 @@ This project demonstrates the implementation of a structured AI evaluation manag
 ## Screenshots
 
 ### Main Dashboard
+
 ![Main Dashboard](screenshots/01-main-dashboard.png)
 
 ### API Documentation
+
 ![API Documentation](screenshots/02-api-documentation.png)
 
 ### Reviewer Disagreement and Audit Logs
+
 ![Reviewer Disagreement and Audit Logs](screenshots/03-reviewer-disagreement-and-audit-logs.png)
 
 ### Full Dashboard
+
 [View Full Dashboard Screenshot](screenshots/04-full-dashboard.png)
