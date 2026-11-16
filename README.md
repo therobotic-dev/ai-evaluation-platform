@@ -103,7 +103,7 @@ The SQLite database is created locally when the application is initialized and i
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/therobotic-dev/ai-evaluation-platform.git
 cd ai-evaluation-platform
 ```
 
