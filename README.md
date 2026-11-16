@@ -168,3 +168,17 @@ The following application workflows have been manually tested through the FastAP
 ## Project Purpose
 
 This project demonstrates the implementation of a structured AI evaluation management workflow, with an emphasis on evaluation consistency, rubric-based assessment, reviewer alignment, quality monitoring, and activity traceability.
+
+## Screenshots
+
+### Main Dashboard
+![Main Dashboard](screenshots/01-main-dashboard.png)
+
+### API Documentation
+![API Documentation](screenshots/02-api-documentation.png)
+
+### Reviewer Disagreement and Audit Logs
+![Reviewer Disagreement and Audit Logs](screenshots/03-reviewer-disagreement-and-audit-logs.png)
+
+### Full Dashboard
+[View Full Dashboard Screenshot](screenshots/04-full-dashboard.png)
